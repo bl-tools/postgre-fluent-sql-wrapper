@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>Provides fluent style wrapper around npgsql package for executing postgre sql commands</Description>
+    <Authors>BlTools</Authors>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Company>bl-tools</Company>
+    <RepositoryUrl>https://github.com/bl-tools/postgre-fluent-sql-wrapper</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" Version="4.1.4" />
+  </ItemGroup>
+
+</Project>
