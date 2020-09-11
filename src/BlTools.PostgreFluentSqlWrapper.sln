@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlTools.PostgreFluentSqlWrapper", "BlTools.PostgreFluentSqlWrapper\BlTools.PostgreFluentSqlWrapper.csproj", "{70167377-B94D-4CA6-8540-C7B06DA5DDCC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{70167377-B94D-4CA6-8540-C7B06DA5DDCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70167377-B94D-4CA6-8540-C7B06DA5DDCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70167377-B94D-4CA6-8540-C7B06DA5DDCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70167377-B94D-4CA6-8540-C7B06DA5DDCC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D02DDBD7-E8E3-4BEA-A48B-DA6709A0C5BA}
+	EndGlobalSection
+EndGlobal
