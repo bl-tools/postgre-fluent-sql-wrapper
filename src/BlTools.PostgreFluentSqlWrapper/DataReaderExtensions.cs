@@ -19,6 +19,17 @@ namespace BlTools.PostgreFluentSqlWrapper
             return reader.IsDBNull(ordinal) ? (int?)null : reader.GetInt32(ordinal);
         }
 
+        public static long GetInt64(this IDataReader reader, string name)
+        {
+            return reader.GetInt64(reader.GetOrdinal(name));
+        }
+
+        public static long? GetInt64Null(this IDataReader reader, string name)
+        {
+            var ordinal = reader.GetOrdinal(name);
+            return reader.IsDBNull(ordinal) ? (long?)null : reader.GetInt64(ordinal);
+        }
+
         public static double GetDouble(this IDataReader reader, string name)
         {
             return reader.GetDouble(reader.GetOrdinal(name));
@@ -92,11 +103,16 @@ namespace BlTools.PostgreFluentSqlWrapper
             return reader.IsDBNull(ordinal) ? (DateTimeOffset?)null : (DateTimeOffset)reader.GetValue(ordinal);
         }
 
-
         public static List<string> GetListString(this IDataReader reader, string name)
         {
             var arrayValues = (string[])reader.GetValue(reader.GetOrdinal(name));
             return arrayValues.ToList();
+        }
+
+        public static byte[] GetByteArray(this IDataReader reader, string name)
+        {
+            var arrayValues = (byte[])reader.GetValue(reader.GetOrdinal(name));
+            return arrayValues.ToArray();
         }
     }
 }
