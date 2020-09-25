@@ -112,7 +112,7 @@ namespace BlTools.PostgreFluentSqlWrapper
         public static byte[] GetByteArray(this IDataReader reader, string name)
         {
             var arrayValues = (byte[])reader.GetValue(reader.GetOrdinal(name));
-            return arrayValues.ToArray();
+            return arrayValues;
         }
     }
 }
