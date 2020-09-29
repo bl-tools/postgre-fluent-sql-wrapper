@@ -144,6 +144,19 @@ namespace BlTools.PostgreFluentSqlWrapper
             return this;
         }
 
+        public FluentSqlCommand AddParam(string name, long? value)
+        {
+            if (value != null)
+            {
+                FillParam(name, value.Value, NpgsqlDbType.Bigint);
+            }
+            else
+            {
+                FillNullParam(name, NpgsqlDbType.Bigint);
+            }
+            return this;
+        }
+
         public FluentSqlCommand AddParam(string name, DateTime? value)
         {
             if (value != null)
@@ -182,6 +195,18 @@ namespace BlTools.PostgreFluentSqlWrapper
             }
             return this;
         }
+        public FluentSqlCommand AddParam(string name, byte[] value)
+        {
+            if (value != null)
+            {
+                FillParam(name, value, NpgsqlDbType.Bytea);
+            }
+            else
+            {
+                FillNullParam(name, NpgsqlDbType.Bytea);
+            }
+            return this;
+        }
 
         public FluentSqlCommand AddCompositeParam<T>(string name, T value, string sqlTypeName) where T : new()
         {
@@ -211,6 +236,19 @@ namespace BlTools.PostgreFluentSqlWrapper
             var parameter = new NpgsqlParameter(name, dbType);
             parameter.Value = DBNull.Value;
             _command.Parameters.Add(parameter);
+        }
+
+        public FluentSqlCommand AddJsonParam(string name, string value)
+        {
+            if (value != null)
+            {
+                FillParam(name, value, NpgsqlDbType.Json);
+            }
+            else
+            {
+                FillNullParam(name, NpgsqlDbType.Json);
+            }
+            return this;
         }
 
         #endregion
