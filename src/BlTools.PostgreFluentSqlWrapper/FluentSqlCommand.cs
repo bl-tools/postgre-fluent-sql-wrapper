@@ -15,9 +15,11 @@ namespace BlTools.PostgreFluentSqlWrapper
         private bool _needPreparation;
         private bool _needReloadTypes;
         private Action<IDataReader> _dataReaderAction;
+        private Action<IDataReader, int> _dataReaderActionMultiSet;
         private Dictionary<string, Exception> _exceptionsOnConstraints;
         private bool _needToExecAsStoredProcedure = false;
         private string _refCursorName;
+        private IEnumerable<string> _refCursorNames;
 
 
         public FluentSqlCommand(string connectionString)
@@ -27,6 +29,7 @@ namespace BlTools.PostgreFluentSqlWrapper
             _command.Connection = _connection;
             _needPreparation = true;
             _needReloadTypes = false;
+            _refCursorNames = new List<string>();
         }
         
         /// <summary>
@@ -63,6 +66,22 @@ namespace BlTools.PostgreFluentSqlWrapper
         {
             _needToExecAsStoredProcedure = true;
             _refCursorName = refCursorName;
+            _needPreparation = false;
+            _command.CommandText = procedureExecText;
+            _command.CommandType = CommandType.Text;
+            return this;
+        }
+		
+        /// <summary>
+        /// Stored procedures getting multiple data sets.
+        /// </summary>
+        /// <param name="procedureExecText">text of sql statement how procedure will be called. ex - "call procedureName(param1, param2...)</param>
+        /// <param name="refCursorName">A list of data cursors one for each data set</param>
+        /// <returns></returns>
+        public FluentSqlCommand StoredProcedure(string procedureExecText, IEnumerable<string> refCursorNames)
+        {
+            _needToExecAsStoredProcedure = true;
+            _refCursorNames = refCursorNames;
             _needPreparation = false;
             _command.CommandText = procedureExecText;
             _command.CommandType = CommandType.Text;
@@ -117,7 +136,7 @@ namespace BlTools.PostgreFluentSqlWrapper
             }
             return this;
         }
-
+		
         public FluentSqlCommand AddParam(string name, int? value)
         {
             if (value != null)
@@ -179,6 +198,19 @@ namespace BlTools.PostgreFluentSqlWrapper
             else
             {
                 FillNullParam(name, NpgsqlDbType.Boolean);
+            }
+            return this;
+        }
+		
+        public FluentSqlCommand AddParam(string name, Guid? value)
+        {
+            if (value != null)
+            {
+                FillParam(name, value.Value, NpgsqlDbType.Uuid);
+            }
+            else
+            {
+                FillNullParam(name, NpgsqlDbType.Uuid);
             }
             return this;
         }
@@ -251,6 +283,18 @@ namespace BlTools.PostgreFluentSqlWrapper
             return this;
         }
 
+        public FluentSqlCommand AddParamXml(string name, string value)
+        {
+            if (value != null)
+            {
+                FillParam(name, value, NpgsqlDbType.Xml);
+            }
+            else
+            {
+                FillNullParam(name, NpgsqlDbType.Xml);
+            }
+            return this;
+        }
         #endregion
 
 
@@ -315,6 +359,20 @@ namespace BlTools.PostgreFluentSqlWrapper
             return result;
         }
 
+        /// <summary>
+        /// Allows for retrieval of multiple data sets from single stored procedure
+        /// </summary>
+        /// <param name="itemBuilder"></param>
+        public void ExecReadList(Action<IDataReader, int> itemBuilder)
+        {
+            _dataReaderActionMultiSet = itemBuilder;
+
+            // multi set only supported for stored procedures retrieving data sets
+            if (_needToExecAsStoredProcedure)
+            {
+                ExecStoredProcedureMultiSet();
+            }
+        }
 
         public List<T> ExecReadList<T>(Func<IDataReader, T> itemBuilder)
         {
@@ -505,6 +563,64 @@ namespace BlTools.PostgreFluentSqlWrapper
         }
 
         #region exec stored procedures
+		private void ExecStoredProcedureMultiSet()
+        {
+            NpgsqlTransaction transaction = null;
+
+            using (_command.Connection)
+            {
+                try
+                {
+                    InitCommand();
+                    transaction = _command.Connection.BeginTransaction();
+
+                    using (_command)
+                    {
+                        if (_needPreparation)
+                        {
+                            _command.Prepare();
+                        }
+
+                        if (_needReloadTypes)
+                        {
+                            _command.Connection?.ReloadTypes();
+                        }
+
+                        _command.ExecuteNonQuery();
+
+                        int setNumber = 0;
+                        foreach(var cursorName in _refCursorNames)
+                        {
+                            var fetchAllCommand = new NpgsqlCommand($"FETCH ALL IN \"{cursorName}\";", _command.Connection);
+                            fetchAllCommand.Transaction = transaction;
+
+                            IDataReader reader = fetchAllCommand.ExecuteReader();
+                            using (reader)
+                            {
+                                do
+                                {
+                                    while (reader.Read())
+                                    {
+                                        _dataReaderActionMultiSet?.Invoke(reader, setNumber);
+                                    }
+                                }
+                                while (reader.NextResult());
+                            }
+
+                            setNumber++;
+                        }
+                    }
+
+                    transaction.Commit();
+                }
+                catch (PostgresException ex)
+                {
+                    transaction?.RollbackAsync();
+                    ProcessException(ex);
+                }
+            }
+        }
+		
         private object ExecStoredProcedure(ExecType execType)
         {
             object result = null;
