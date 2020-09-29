@@ -38,3 +38,61 @@ var outgoingData = command.StoredProcedure("CALL storedProcedureName(@param1, @p
                                    return result;
                                });
 ```
+
+
+An example of calling stored procedure which returns multiple data sets. Note that the data sets can have different columns:
+
+```csharp
+public Results LoadResults(int batchSize)
+{
+	var result = new Results
+	{
+		FirstResultSet = new List<FirstResultSetType>(),
+		SecondResultSet = new List<SecondResultSetType>()
+	};
+
+	new FluentSqlCommand("connection string")
+		.StoredProcedure("CALL someStoredProc(@batchSize, 'p_refcur1', 'p_refcur2')", 
+			new List<string>(){ "p_refcur1", "p_refcur2" })
+		.AddParam("batchSize", batchSize)
+		.ExecReadList((reader, resultSet) => FillRecords(result, reader, resultSet));
+
+	return result;
+}
+
+
+private static void FillRecords(Results result, IDataRecord record, int resultNumber)
+{
+	switch (resultNumber)
+	{
+		case 0:
+			result.FirstResultSet.Add(ReadFirstResultSetRecord(record));
+			break;
+		case 1:
+			result.SecondResultSet.Add(ReadSecondResultSetRecord(record));
+			break;
+		default:
+			return;
+	}
+}
+
+private static FirstResultSetType ReadFirstResultSetRecord(IDataRecord record)
+{
+	return new FirstResultSetType
+	{
+		RecordId = record.GetGuid("record_id"),
+		Value1 = record.GetInt32("value_1"),
+		Value2 = record.GetString("value_2")
+	};
+}
+
+private static SecondResultSetType ReadSecondResultSetRecord(IDataRecord record)
+{
+	return new SecondResultSetType
+	{
+		RecordId = record.GetGuid("record_id"),
+		Value3 = record.GetString("value_3"),
+		Value4 = record.GetString("value_4")
+	};
+}
+```
